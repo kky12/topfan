@@ -151,7 +151,7 @@ Resources:
       Subnets: !Ref Subnets      
       SecurityGroups:
       - !Ref LoadBalancerSecurityGroup
-  TargetGroup-feeds:
+  TargetGroupfeeds:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: feedsInvokePermission
     Properties:
@@ -159,7 +159,7 @@ Resources:
       TargetType: lambda
       Targets:
       - Id: !GetAtt feeds.Arn
-  TargetGroup-users:
+  TargetGroupusers:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: usersInvokePermission
     Properties:
@@ -167,7 +167,7 @@ Resources:
       TargetType: lambda
       Targets:
       - Id: !GetAtt users.Arn
-  TargetGroup-category:
+  TargetGroupcategory:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: categoryInvokePermission
     Properties:
