@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Description: >-
+Parameters:
+  StageName:
+    Type: String
+    Default: qa
+  Subnets:
+    Description: Subnet Id where instance will create 
+    Type: List<AWS::EC2::Subnet::Id>
+    Default: subnet-e7abe2c9,subnet-2ff7e565
+    
+  VpcId:
+    Description: VPC id 
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-77e6780d
+
+Resources:
+  feeds:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub feeds-${StageName}
+      CodeUri: feeds/
+      Handler: src/handlers/feeds.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the SampleTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          SAMPLE_TABLE: !Ref TopFansDb
+  
+  users:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub users-${StageName}
+      CodeUri: users/
+      Handler: src/handlers/users.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the SampleTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          SAMPLE_TABLE: !Ref TopFansDb
+  category:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub category-${StageName}
+      CodeUri: category/
+      Handler: src/handlers/categories.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users categories
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Category
+      Environment:
+        Variables:
+          SAMPLE_TABLE: !Ref Category
+  post:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub post-${StageName}
+      CodeUri: post/
+      Handler: src/handlers/posts.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users post
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          SAMPLE_TABLE: !Ref TopFansDb      
+  TopFansDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub TopFansDb-${StageName}
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1pk
+          AttributeType: S
+        - AttributeName: gsi1sk
+          AttributeType: S
+           
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes: 
+        - IndexName: GSI1
+          KeySchema: 
+          - AttributeName: gsi1pk
+            KeyType: HASH
+          - AttributeName: gsi1sk
+            KeyType: RANGE
+          Projection: 
+            ProjectionType: ALL 
+          Projection: 
+            ProjectionType: ALL       
+      BillingMode: PAY_PER_REQUEST
+  Category:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub Category-${StageName}
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 0
+        WriteCapacityUnits: 0
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing 
+      Subnets: !Ref Subnets      
+      SecurityGroups:
+      - !Ref LoadBalancerSecurityGroup
+  TargetGroup-feeds:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: feedsInvokePermission
+    Properties:
+      TargetGroupName: !Sub feeds-${StageName}
+      TargetType: lambda
+      Targets:
+      - Id: !GetAtt feeds.Arn
+  TargetGroup-users:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: usersInvokePermission
+    Properties:
+      TargetGroupName: !Sub users-${StageName}
+      TargetType: lambda
+      Targets:
+      - Id: !GetAtt users.Arn
+  TargetGroup-category:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: categoryInvokePermission
+    Properties:
+      TargetGroupName: !Sub category-${StageName}
+      TargetType: lambda
+      Targets:
+      - Id: !GetAtt category.Arn            
+  HttpListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+      - TargetGroupArn: !Ref TargetGroup
+        Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+  usersInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt users.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: elasticloadbalancing.amazonaws.com
+  feedsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt feeds.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: elasticloadbalancing.amazonaws.com
+  categoryInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt category.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: elasticloadbalancing.amazonaws.com      
+      #Outputs:
+      #LoadBalancerDNSNAme:
+      #Value: !GetAtt LoadBalancer.DNSName

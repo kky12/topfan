@@ -1,0 +1,15 @@
+{
+    "user_table": "TopFansDb",
+    "Gender": [
+        "male",
+        "female",
+        "other"
+    ],
+    "USER": "USER",
+    "category": "Category",
+  "Tax_classification_Name":["OkkC Corporation",
+                         "S Corporation",
+                         "Limited Liability Corporation (LLC)",
+                          "Partnership"
+                         ]
+                        }

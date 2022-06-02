@@ -1,0 +1,19 @@
+{
+    "USER_CREATED": "User created successfully",
+    "PASSWORD_UNMATCHED": "passowrd is not matched",
+    "PROFILE_UPDATED": "user profile updated",
+    "LIMIT_EXCEED": "character limit exceeded ",
+    "GENDER": "gender is not supported",
+    "USER_VERFIED": "User verified successfully.",
+    "FNAME_VALIDATION": "first name can't be blank",
+    "LNAME_VALIDATION": "last name can't be blank",
+    "DATE_VALIDATION": "date of birth cant be blank",
+    "AGE_LIMIT": "age limit can't be less than 18",
+    "INVALID_TOKEN":"Invalid token",
+    "CATEGORY_MAX_SELECTED": "Cannot select more than 5 categories.",
+    "NOT_MATCH":"Value doesn't match ",
+    "MANDAOTRY_FIELD":"Mandatory field cant be empty",
+    "USER_NAME":"user name should not contain special character",
+    "EMAIL_VALIDATION":"Email is not valid",
+    "MANDOTRY_FIELDS":"mandatory fields are required"
+}

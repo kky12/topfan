@@ -1,0 +1,491 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Topfan-Lite-dev
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+Parameters:
+  StageName:
+    Type: String
+    Default: Prod
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is a Lambda function config associated with the source code: get-all-items.js
+ 
+  users:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: users
+      CodeUri: users/
+      Handler: src/handlers/users.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users methods and events  
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          SAMPLE_TABLE: !Ref TopFansDb
+      Events:
+        GetAllUsersApi:
+          Type: HttpApi
+          Properties:
+            Path: /users # Create user
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        CreateUserApi:
+          Type: HttpApi
+          Properties:
+            Path: /users # Create user
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        UpsertUsersApi:
+          Type: HttpApi
+          Properties:
+            Path: /users # Update user
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        UpdateUsersCategoryApi:
+          Type: HttpApi
+          Properties:
+            Path: /users/category # Update users category & subcategory
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        SignInAPI:
+          Type: HttpApi
+          Properties:
+            Path: /users/login # Login
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        VerifyUserAPI:
+          Type: HttpApi
+          Properties:
+            Path: /users/verify # Verify User
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        ResendOTPAPI:
+          Type: HttpApi
+          Properties:
+            Path: /users/resend-OTP # Resend OTP
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        GetHomeScreen:
+          Type: HttpApi
+          Properties:
+            Path: /home # Get Home Screen
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        userPrefrenceUpdate:
+          Type: HttpApi
+          Properties:
+            Path: /preferences # Verify User
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600 
+        userPrefrenceNotiffication:
+          Type: HttpApi
+          Properties:
+            Path: /user/notification # user prefrence notification
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600         
+        userW9Form:
+          Type: HttpApi
+          Properties:
+            Path: /w9form # user prefrence notification
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600                    
+
+  feeds:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: feeds
+      CodeUri: feeds/
+      Handler: src/handlers/feeds.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users posts and feeds
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the SampleTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          SAMPLE_TABLE: !Ref TopFansDb
+      Events:
+        createUser:
+          Type: HttpApi
+          Properties:
+            Path: /feeds # Dummy route
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+
+
+  category:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: category
+      CodeUri: category/
+      Handler: src/handlers/categories.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users categories
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Category
+      Environment:
+        Variables:
+          SAMPLE_TABLE: !Ref Category
+      Events:
+        createCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        updateCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/{pk}/{sk}
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getAllCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getCategoryById:
+          Type: HttpApi
+          Properties:
+            Path: /category/{pk}/{sk}
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        deleteCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/{pk}/{sk}
+            Method: DELETE
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        createSubCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/subcategory
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        updateSubCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/subcategory/{pk}/{sk}
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getAllSubCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/subcategory
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getSubCategoryById:
+          Type: HttpApi
+          Properties:
+            Path: /category/subcategory/{pk}
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        deleteSubCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/subcategory/{pk}/{sk}
+            Method: DELETE
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getUsersOfCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/users/{id} # Get users of a category
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600  
+
+
+
+
+  post:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: post
+      CodeUri: post/
+      Handler: src/handlers/posts.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: This function will handle the users post
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TopFansDb
+      Environment:
+        Variables:
+          SAMPLE_TABLE: !Ref TopFansDb
+      Events:
+        createPost:
+          Type: HttpApi
+          Properties:
+            Path: /post
+            Method: POST
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        updatePost:
+          Type: HttpApi
+          Properties:
+            Path: /post/{pk}/{sk}
+            Method: PUT
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getAllPost:
+          Type: HttpApi
+          Properties:
+            Path: /post
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getPostById:
+          Type: HttpApi
+          Properties:
+            Path: /post/{pk}/{sk}
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        deletePost:
+          Type: HttpApi
+          Properties:
+            Path: /post/{pk}/{sk}
+            Method: DELETE
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600
+        getUserPost:
+          Type: HttpApi
+          Properties:
+            Path: /post/users # user post
+            Method: GET
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: "2.0"
+            RouteSettings:
+              ThrottlingBurstLimit: 600      
+
+  # # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
+  # # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
+
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 200
+      CorsConfiguration:
+        AllowOrigins:
+        - "*"
+        AllowHeaders:
+        - "*"
+        AllowMethods:
+        - GET
+        - PUT
+        - POST
+        - DELETE
+        - PATCH
+        MaxAge: 120
+        AllowCredentials: false
+      RouteSettings:
+        "POST /users":
+          ThrottlingBurstLimit: 500 
+        # "PUT /users":
+        #   ThrottlingBurstLimit: 500 
+        "PUT /feeds":
+          ThrottlingBurstLimit: 500 
+
+
+
+  TopFansDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TopFansDb
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1pk
+          AttributeType: S
+        - AttributeName: gsi1sk
+          AttributeType: S
+           
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes: 
+        - IndexName: GSI1
+          KeySchema: 
+          - AttributeName: gsi1pk
+            KeyType: HASH
+          - AttributeName: gsi1sk
+            KeyType: RANGE
+          Projection: 
+            ProjectionType: ALL 
+          Projection: 
+            ProjectionType: ALL       
+      BillingMode: PAY_PER_REQUEST
+  
+  Category:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Category
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 0
+        WriteCapacityUnits: 0
+
+#  Outputs:
+#    WebEndpoint:
+#    Description: "API Gateway endpoint URL for Prod stage"
+#    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"

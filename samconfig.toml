@@ -1,0 +1,14 @@
+
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "Topfan-Lite-Dev"
+s3_bucket = "topfan-lite-dev-pipeline"
+s3_prefix = "topfan-lite-dev"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+image_repositories = []
+parameter_overrides = "StageName=\"Prod\""
+
